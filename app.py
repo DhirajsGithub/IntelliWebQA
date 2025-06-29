@@ -11,8 +11,8 @@ GEMINI_KEY = os.getenv('GEMINI_API_KEY')
 os.environ["GOOGLE_API_KEY"] = GEMINI_KEY
 
 # Streamlit UI
-st.title("News Research Tool 📈")
-st.sidebar.title("News Article URLs")
+st.title("🔎 IntelliWebQA – Ask Questions on Any Webpage")
+st.sidebar.title("Enter Web Page URLs")
 
 urls = []
 for i in range(3):
@@ -34,12 +34,12 @@ llm = ChatGoogleGenerativeAI(
 
 # Process URLs and build FAISS index
 if process_url_clicked:
-    main_placeholder.text("Loading data from URLs... ✅")
+    main_placeholder.text("📄 Loading data from webpages...")
     filtered_urls = [url for url in urls if url.startswith(('http://', 'https://'))]
     loader = WebBaseLoader(filtered_urls)
     data = loader.load()
 
-    main_placeholder.text("Splitting text into chunks... ✅")
+    main_placeholder.text("✂️ Splitting text into chunks...")
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200,
@@ -47,15 +47,15 @@ if process_url_clicked:
     )
     chunks = splitter.split_documents(data)
 
-    main_placeholder.text("Generating embeddings... ✅")
+    main_placeholder.text("🧠 Generating semantic embeddings...")
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
-    main_placeholder.text("Saving vector store to disk... ✅")
+    main_placeholder.text("💾 Building and saving vector store...")
     vectorstore = FAISS.from_documents(documents=chunks, embedding=embeddings)
     vectorstore.save_local("my_faiss_index")
 
 # Accept user query
-query = main_placeholder.text_input("Ask a question based on the articles:")
+query = main_placeholder.text_input("Ask a question about the content of the webpages:")
 if query:
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     vectorstore = FAISS.load_local(
@@ -64,7 +64,7 @@ if query:
         allow_dangerous_deserialization=True
     )
 
-    # Use the default "stuff" chain
+    # Use the "stuff" method to answer based on retrieved chunks
     chain = RetrievalQAWithSourcesChain.from_llm(
         llm=llm,
         retriever=vectorstore.as_retriever()
